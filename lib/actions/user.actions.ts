@@ -10,7 +10,7 @@ import {
 	ProcessorTokenCreateRequestProcessorEnum,
 	Products,
 } from "plaid";
-import { plaidClient } from "@/lib/palid";
+import { plaidClient } from "@/lib/plaid";
 import { revalidatePath } from "next/cache";
 import { addFundingSource, createDwollaCustomer } from "./dwolla.actions";
 
@@ -74,7 +74,7 @@ export const signUp = async ({password , ...userData}: SignUpParams) => {
 		
 		const session = await account.createEmailPasswordSession(email, password);
 
-		cookies().set("appwrite-session", session.secret, {
+		(await cookies()).set("appwrite-session", session.secret, {
 			// 3:00
 			path: "/",
 			httpOnly: true,
@@ -83,7 +83,7 @@ export const signUp = async ({password , ...userData}: SignUpParams) => {
 		});
 		return parseStringify(newUser);
 	} catch (error) {
-		console.log(error);
+		console.error(error);
 	}
 };
 
@@ -105,7 +105,7 @@ export const logoutAccount = async () => {
 	try {
 		const { account } = await createSessionClient();
 
-		cookies().delete("appwrite-session ");
+		(await cookies()).delete("appwrite-session ");
 
 		await account.deleteSession("current");
 	} catch (error) {
@@ -139,7 +139,7 @@ export const createBankAccount = async ({
 	accountId,
 	accessToken,
 	fundingSourceUrl,
-	sharableId,
+	shareableId,
 }: createBankAccountProps) => {
 	try {
 		const { database } = await createAdminClient()
@@ -154,7 +154,7 @@ export const createBankAccount = async ({
 				accountId,
 				accessToken,
 				fundingSourceUrl,
-				sharableId,
+				shareableId,
 			}
 		)
 
@@ -204,14 +204,14 @@ export const exchangePublicToken = async ({
 		// If the funding source URL is not created, throw an error
 		if (!fundingSourceUrl) throw Error;
 
-		// Create a bank account using the user ID, item ID, account ID, access token, funding source URL, and sharable ID
+		// Create a bank account using the user ID, item ID, account ID, access token, funding source URL, and shareable ID
 		await createBankAccount({
 			userId: user.$id,
 			bankId: itemId,
 			accountId: accountData.account_id,
 			accessToken,
 			fundingSourceUrl,
-			sharableId: encryptId(accountData.account_id),
+			shareableId: encryptId(accountData.account_id),
 		});
 
 		// Revalidate the path to reflect the changes
